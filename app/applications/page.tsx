@@ -138,8 +138,13 @@ export default function ApplicationsPage() {
                     <td className="px-6 py-4 font-medium">
                       {application.company}
                     </td>
-                    <td className="px-6 py-4 text-slate-600">
-                      {application.title}
+                    <td className="px-6 py-4">
+                      <Link
+                        href="/applications/1"
+                        className="font-medium text-slate-950 hover:text-slate-700"
+                      >
+                        {application.title}
+                      </Link>
                     </td>
                     <td className="px-6 py-4">
                       <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
