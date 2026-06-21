@@ -22,22 +22,29 @@ export default function LoginPage() {
       return;
     }
 
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    const supabase = createBrowserSupabaseClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+      const supabase = createBrowserSupabaseClient();
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    setLoading(false);
+      if (error) {
+        setErrorMessage(error.message);
+        return;
+      }
 
-    if (error) {
-      setErrorMessage(error.message);
-      return;
+      router.push("/dashboard");
+    } catch (error) {
+      console.error("Login failed:", error);
+      setErrorMessage(
+        "Something went wrong while logging in. Please try again.",
+      );
+    } finally {
+      setLoading(false);
     }
-
-    router.push("/dashboard");
   }
 
   return (

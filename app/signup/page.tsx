@@ -31,33 +31,40 @@ export default function SignupPage() {
       return;
     }
 
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    const supabase = createBrowserSupabaseClient();
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
+      const supabase = createBrowserSupabaseClient();
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          },
         },
-      },
-    });
+      });
 
-    setLoading(false);
+      if (error) {
+        setErrorMessage(error.message);
+        return;
+      }
 
-    if (error) {
-      setErrorMessage(error.message);
-      return;
+      setSuccessMessage(
+        "Account created successfully. Redirecting you to login...",
+      );
+
+      setTimeout(() => {
+        router.push("/login");
+      }, 1500);
+    } catch (error) {
+      console.error("Signup failed:", error);
+      setErrorMessage(
+        "Something went wrong while creating your account. Please try again.",
+      );
+    } finally {
+      setLoading(false);
     }
-
-    setSuccessMessage(
-      "Account created successfully. Redirecting you to login...",
-    );
-
-    setTimeout(() => {
-      router.push("/login");
-    }, 1500);
   }
 
   return (
