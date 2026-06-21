@@ -6,7 +6,7 @@ This project was built as a beginner-to-junior full-stack developer portfolio pr
 
 ## Live Demo
 
-Live demo: `https://your-vercel-deployment-url.vercel.app`
+Live demo: [https://job-application-tracker-omega-two.vercel.app](https://job-application-tracker-omega-two.vercel.app)
 
 ## Features
 
