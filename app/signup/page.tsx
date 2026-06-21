@@ -63,7 +63,7 @@ export default function SignupPage() {
   return (
     <main className="min-h-screen bg-slate-50 text-slate-950">
       <nav className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
           <Link href="/" className="text-xl font-bold tracking-tight">
             JobTrackr
           </Link>
@@ -76,8 +76,8 @@ export default function SignupPage() {
         </div>
       </nav>
 
-      <section className="mx-auto flex min-h-[calc(100vh-73px)] max-w-6xl items-center justify-center px-6 py-16">
-        <div className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
+      <section className="mx-auto flex min-h-[calc(100vh-73px)] max-w-6xl items-center justify-center px-6 py-10 sm:py-16">
+        <div className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
           <div className="mb-8 text-center">
             <h1 className="text-3xl font-bold tracking-tight">
               Create your account
@@ -161,13 +161,13 @@ export default function SignupPage() {
             </div>
 
             {errorMessage ? (
-              <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
                 {errorMessage}
               </p>
             ) : null}
 
             {successMessage ? (
-              <p className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+              <p className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
                 {successMessage}
               </p>
             ) : null}

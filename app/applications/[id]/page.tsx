@@ -132,13 +132,13 @@ export default function ApplicationDetailsPage() {
           <nav className="flex flex-wrap gap-3">
             <Link
               href="/dashboard"
-              className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 transition hover:bg-slate-100"
+              className="rounded-md border border-slate-300 bg-white px-4 py-2 text-center text-sm font-medium text-slate-800 transition hover:bg-slate-100"
             >
               Dashboard
             </Link>
             <Link
               href="/applications"
-              className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 transition hover:bg-slate-100"
+              className="rounded-md border border-slate-300 bg-white px-4 py-2 text-center text-sm font-medium text-slate-800 transition hover:bg-slate-100"
             >
               Applications
             </Link>
@@ -148,11 +148,16 @@ export default function ApplicationDetailsPage() {
 
       <section className="mx-auto max-w-6xl px-6 py-10">
         {loading ? (
-          <p className="rounded-lg border border-slate-200 bg-white px-6 py-4 text-sm font-medium text-slate-600 shadow-sm">
-            Loading application...
-          </p>
+          <div className="rounded-lg border border-slate-200 bg-white px-6 py-5 shadow-sm">
+            <p className="text-sm font-semibold text-slate-950">
+              Loading application
+            </p>
+            <p className="mt-1 text-sm text-slate-500">
+              Getting the latest saved details...
+            </p>
+          </div>
         ) : errorMessage ? (
-          <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
             {errorMessage}
           </p>
         ) : !application ? (

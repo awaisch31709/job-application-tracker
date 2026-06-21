@@ -22,12 +22,12 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-slate-50 text-slate-950">
       <nav className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
           <Link href="/" className="text-xl font-bold tracking-tight">
             JobTrackr
           </Link>
 
-          <div className="flex items-center gap-3">
+          <div className="flex shrink-0 items-center gap-3">
             <Link
               href="/login"
               className="rounded-md px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-950"
@@ -44,7 +44,7 @@ export default function Home() {
         </div>
       </nav>
 
-      <section className="mx-auto grid max-w-6xl gap-12 px-6 py-16 md:grid-cols-[1.2fr_0.8fr] md:items-center md:py-24">
+      <section className="mx-auto grid max-w-6xl gap-10 px-6 py-14 md:grid-cols-[1.2fr_0.8fr] md:items-center md:py-20">
         <div>
           <p className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500">
             Job search made simpler
@@ -76,7 +76,9 @@ export default function Home() {
         <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-500">This week</p>
+              <p className="text-sm font-medium text-slate-500">
+                Applications tracked
+              </p>
               <p className="text-3xl font-bold text-slate-950">12</p>
             </div>
             <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-medium text-emerald-700">
@@ -101,7 +103,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-6 pb-16">
+      <section className="mx-auto max-w-6xl px-6 pb-14">
         <div className="grid gap-6 md:grid-cols-3">
           {features.map((feature) => (
             <article
