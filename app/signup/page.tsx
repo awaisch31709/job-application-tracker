@@ -58,7 +58,7 @@ export default function SignupPage() {
         router.push("/login");
       }, 1500);
     } catch (error) {
-      console.error("Signup failed:", error);
+      console.error("Signup error:", error);
       setErrorMessage(
         error instanceof Error ? error.message : String(error),
       );
