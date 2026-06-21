@@ -30,6 +30,8 @@ function formatDate(date: string | null) {
 export default function ApplicationsPage() {
   const router = useRouter();
   const [applications, setApplications] = useState<Application[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("All statuses");
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -65,6 +67,19 @@ export default function ApplicationsPage() {
 
     loadApplications();
   }, [router]);
+
+  const filteredApplications = applications.filter((application) => {
+    const searchValue = searchTerm.trim().toLowerCase();
+    const matchesSearch =
+      !searchValue ||
+      application.company_name.toLowerCase().includes(searchValue) ||
+      application.job_title.toLowerCase().includes(searchValue);
+    const matchesStatus =
+      selectedStatus === "All statuses" ||
+      application.status === selectedStatus;
+
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-950">
@@ -123,6 +138,8 @@ export default function ApplicationsPage() {
                 id="search"
                 name="search"
                 type="search"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
                 placeholder="Search by company or job title"
                 className="w-full rounded-md border border-slate-300 px-4 py-3 text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-slate-950 focus:ring-2 focus:ring-slate-200"
               />
@@ -135,15 +152,16 @@ export default function ApplicationsPage() {
               <select
                 id="status"
                 name="status"
+                value={selectedStatus}
+                onChange={(event) => setSelectedStatus(event.target.value)}
                 className="w-full rounded-md border border-slate-300 bg-white px-4 py-3 text-slate-700 outline-none transition focus:border-slate-950 focus:ring-2 focus:ring-slate-200"
-                defaultValue="all"
               >
-                <option value="all">All statuses</option>
-                <option value="saved">Saved</option>
-                <option value="applied">Applied</option>
-                <option value="interviewing">Interviewing</option>
-                <option value="offer">Offer</option>
-                <option value="rejected">Rejected</option>
+                <option value="All statuses">All statuses</option>
+                <option value="Saved">Saved</option>
+                <option value="Applied">Applied</option>
+                <option value="Interviewing">Interviewing</option>
+                <option value="Offer">Offer</option>
+                <option value="Rejected">Rejected</option>
               </select>
             </div>
           </div>
@@ -169,6 +187,15 @@ export default function ApplicationsPage() {
                 Add Application
               </Link>
             </div>
+          ) : filteredApplications.length === 0 ? (
+            <div className="px-6 py-10 text-center">
+              <h2 className="text-lg font-semibold">
+                No matching applications
+              </h2>
+              <p className="mt-2 text-sm text-slate-500">
+                Try changing your search text or status filter.
+              </p>
+            </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[760px] text-left">
@@ -182,7 +209,7 @@ export default function ApplicationsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
-                  {applications.map((application) => (
+                  {filteredApplications.map((application) => (
                     <tr key={application.id}>
                       <td className="px-6 py-4 font-medium">
                         {application.company_name}
