@@ -1,6 +1,65 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { FormEvent, useState } from "react";
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 
 export default function SignupPage() {
+  const router = useRouter();
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  async function handleSignup(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    if (!fullName.trim() || !email.trim() || !password || !confirmPassword) {
+      setErrorMessage("Please fill in all required fields.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setErrorMessage("Passwords do not match.");
+      return;
+    }
+
+    setLoading(true);
+
+    const supabase = createBrowserSupabaseClient();
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+        },
+      },
+    });
+
+    setLoading(false);
+
+    if (error) {
+      setErrorMessage(error.message);
+      return;
+    }
+
+    setSuccessMessage(
+      "Account created successfully. Redirecting you to login...",
+    );
+
+    setTimeout(() => {
+      router.push("/login");
+    }, 1500);
+  }
+
   return (
     <main className="min-h-screen bg-slate-50 text-slate-950">
       <nav className="border-b border-slate-200 bg-white">
@@ -28,7 +87,7 @@ export default function SignupPage() {
             </p>
           </div>
 
-          <form className="space-y-5">
+          <form className="space-y-5" onSubmit={handleSignup}>
             <div>
               <label
                 htmlFor="full-name"
@@ -40,6 +99,8 @@ export default function SignupPage() {
                 id="full-name"
                 name="full-name"
                 type="text"
+                value={fullName}
+                onChange={(event) => setFullName(event.target.value)}
                 placeholder="Your full name"
                 className="w-full rounded-md border border-slate-300 px-4 py-3 text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-slate-950 focus:ring-2 focus:ring-slate-200"
               />
@@ -56,6 +117,8 @@ export default function SignupPage() {
                 id="email"
                 name="email"
                 type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
                 placeholder="you@example.com"
                 className="w-full rounded-md border border-slate-300 px-4 py-3 text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-slate-950 focus:ring-2 focus:ring-slate-200"
               />
@@ -72,6 +135,8 @@ export default function SignupPage() {
                 id="password"
                 name="password"
                 type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
                 placeholder="Create a password"
                 className="w-full rounded-md border border-slate-300 px-4 py-3 text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-slate-950 focus:ring-2 focus:ring-slate-200"
               />
@@ -88,16 +153,31 @@ export default function SignupPage() {
                 id="confirm-password"
                 name="confirm-password"
                 type="password"
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
                 placeholder="Confirm your password"
                 className="w-full rounded-md border border-slate-300 px-4 py-3 text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-slate-950 focus:ring-2 focus:ring-slate-200"
               />
             </div>
 
+            {errorMessage ? (
+              <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {errorMessage}
+              </p>
+            ) : null}
+
+            {successMessage ? (
+              <p className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                {successMessage}
+              </p>
+            ) : null}
+
             <button
-              type="button"
-              className="w-full rounded-md bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-md bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
             >
-              Create Account
+              {loading ? "Creating Account..." : "Create Account"}
             </button>
           </form>
 
