@@ -1,6 +1,88 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { FormEvent, useEffect, useState } from "react";
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 
 export default function NewApplicationPage() {
+  const router = useRouter();
+  const [userId, setUserId] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [jobTitle, setJobTitle] = useState("");
+  const [jobUrl, setJobUrl] = useState("");
+  const [location, setLocation] = useState("");
+  const [status, setStatus] = useState("Saved");
+  const [salaryRange, setSalaryRange] = useState("");
+  const [appliedDate, setAppliedDate] = useState("");
+  const [notes, setNotes] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  useEffect(() => {
+    async function checkUser() {
+      const supabase = createBrowserSupabaseClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+
+      setUserId(user.id);
+    }
+
+    checkUser();
+  }, [router]);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    if (!companyName.trim() || !jobTitle.trim()) {
+      setErrorMessage("Company Name and Job Title are required.");
+      return;
+    }
+
+    if (!userId) {
+      setErrorMessage("Please log in before saving an application.");
+      return;
+    }
+
+    setLoading(true);
+
+    const supabase = createBrowserSupabaseClient();
+    const { error } = await supabase.from("applications").insert({
+      user_id: userId,
+      company_name: companyName,
+      job_title: jobTitle,
+      job_url: jobUrl,
+      location,
+      status,
+      salary_range: salaryRange,
+      applied_date: appliedDate || null,
+      notes,
+    });
+
+    setLoading(false);
+
+    if (error) {
+      setErrorMessage(error.message);
+      return;
+    }
+
+    setSuccessMessage("Application saved successfully. Redirecting...");
+
+    setTimeout(() => {
+      router.push("/applications");
+    }, 1500);
+  }
+
   return (
     <main className="min-h-screen bg-slate-50 text-slate-950">
       <header className="border-b border-slate-200 bg-white">
@@ -39,7 +121,10 @@ export default function NewApplicationPage() {
           </p>
         </div>
 
-        <form className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+        <form
+          className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm"
+          onSubmit={handleSubmit}
+        >
           <div className="grid gap-5 md:grid-cols-2">
             <div>
               <label
@@ -52,6 +137,8 @@ export default function NewApplicationPage() {
                 id="company-name"
                 name="company-name"
                 type="text"
+                value={companyName}
+                onChange={(event) => setCompanyName(event.target.value)}
                 placeholder="Nova Studio"
                 className="w-full rounded-md border border-slate-300 px-4 py-3 text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-slate-950 focus:ring-2 focus:ring-slate-200"
               />
@@ -68,6 +155,8 @@ export default function NewApplicationPage() {
                 id="job-title"
                 name="job-title"
                 type="text"
+                value={jobTitle}
+                onChange={(event) => setJobTitle(event.target.value)}
                 placeholder="Frontend Developer"
                 className="w-full rounded-md border border-slate-300 px-4 py-3 text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-slate-950 focus:ring-2 focus:ring-slate-200"
               />
@@ -84,6 +173,8 @@ export default function NewApplicationPage() {
                 id="job-url"
                 name="job-url"
                 type="url"
+                value={jobUrl}
+                onChange={(event) => setJobUrl(event.target.value)}
                 placeholder="https://example.com/job"
                 className="w-full rounded-md border border-slate-300 px-4 py-3 text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-slate-950 focus:ring-2 focus:ring-slate-200"
               />
@@ -100,6 +191,8 @@ export default function NewApplicationPage() {
                 id="location"
                 name="location"
                 type="text"
+                value={location}
+                onChange={(event) => setLocation(event.target.value)}
                 placeholder="Remote"
                 className="w-full rounded-md border border-slate-300 px-4 py-3 text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-slate-950 focus:ring-2 focus:ring-slate-200"
               />
@@ -115,14 +208,15 @@ export default function NewApplicationPage() {
               <select
                 id="status"
                 name="status"
-                defaultValue="saved"
+                value={status}
+                onChange={(event) => setStatus(event.target.value)}
                 className="w-full rounded-md border border-slate-300 bg-white px-4 py-3 text-slate-700 outline-none transition focus:border-slate-950 focus:ring-2 focus:ring-slate-200"
               >
-                <option value="saved">Saved</option>
-                <option value="applied">Applied</option>
-                <option value="interviewing">Interviewing</option>
-                <option value="offer">Offer</option>
-                <option value="rejected">Rejected</option>
+                <option value="Saved">Saved</option>
+                <option value="Applied">Applied</option>
+                <option value="Interviewing">Interviewing</option>
+                <option value="Offer">Offer</option>
+                <option value="Rejected">Rejected</option>
               </select>
             </div>
 
@@ -137,6 +231,8 @@ export default function NewApplicationPage() {
                 id="salary-range"
                 name="salary-range"
                 type="text"
+                value={salaryRange}
+                onChange={(event) => setSalaryRange(event.target.value)}
                 placeholder="$60,000 - $80,000"
                 className="w-full rounded-md border border-slate-300 px-4 py-3 text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-slate-950 focus:ring-2 focus:ring-slate-200"
               />
@@ -153,6 +249,8 @@ export default function NewApplicationPage() {
                 id="applied-date"
                 name="applied-date"
                 type="date"
+                value={appliedDate}
+                onChange={(event) => setAppliedDate(event.target.value)}
                 className="w-full rounded-md border border-slate-300 px-4 py-3 text-slate-950 outline-none transition focus:border-slate-950 focus:ring-2 focus:ring-slate-200"
               />
             </div>
@@ -168,11 +266,25 @@ export default function NewApplicationPage() {
                 id="notes"
                 name="notes"
                 rows={5}
+                value={notes}
+                onChange={(event) => setNotes(event.target.value)}
                 placeholder="Add notes about the role, recruiter, interview details, or follow-up steps."
                 className="w-full resize-y rounded-md border border-slate-300 px-4 py-3 text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-slate-950 focus:ring-2 focus:ring-slate-200"
               />
             </div>
           </div>
+
+          {errorMessage ? (
+            <p className="mt-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {errorMessage}
+            </p>
+          ) : null}
+
+          {successMessage ? (
+            <p className="mt-6 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+              {successMessage}
+            </p>
+          ) : null}
 
           <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <Link
@@ -182,10 +294,11 @@ export default function NewApplicationPage() {
               Cancel
             </Link>
             <button
-              type="button"
-              className="rounded-md bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+              type="submit"
+              disabled={loading}
+              className="rounded-md bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
             >
-              Save Application
+              {loading ? "Saving..." : "Save Application"}
             </button>
           </div>
         </form>
