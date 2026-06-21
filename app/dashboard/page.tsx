@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 
 const summaryCards = [
@@ -41,7 +41,26 @@ const recentApplications = [
 
 export default function DashboardPage() {
   const router = useRouter();
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [loggingOut, setLoggingOut] = useState(false);
+
+  useEffect(() => {
+    async function checkUser() {
+      const supabase = createBrowserSupabaseClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+
+      setCheckingAuth(false);
+    }
+
+    checkUser();
+  }, [router]);
 
   async function handleLogout() {
     setLoggingOut(true);
@@ -50,6 +69,16 @@ export default function DashboardPage() {
     await supabase.auth.signOut();
 
     router.push("/login");
+  }
+
+  if (checkingAuth) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-slate-50 px-6 text-slate-950">
+        <p className="rounded-lg border border-slate-200 bg-white px-6 py-4 text-sm font-medium text-slate-600 shadow-sm">
+          Checking authentication...
+        </p>
+      </main>
+    );
   }
 
   return (
