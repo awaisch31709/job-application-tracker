@@ -40,7 +40,7 @@ export default function LoginPage() {
     } catch (error) {
       console.error("Login failed:", error);
       setErrorMessage(
-        "Something went wrong while logging in. Please try again.",
+        error instanceof Error ? error.message : String(error),
       );
     } finally {
       setLoading(false);

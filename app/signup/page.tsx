@@ -60,7 +60,7 @@ export default function SignupPage() {
     } catch (error) {
       console.error("Signup failed:", error);
       setErrorMessage(
-        "Something went wrong while creating your account. Please try again.",
+        error instanceof Error ? error.message : String(error),
       );
     } finally {
       setLoading(false);
