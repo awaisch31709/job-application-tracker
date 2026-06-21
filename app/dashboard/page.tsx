@@ -1,4 +1,9 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 
 const summaryCards = [
   { label: "Total Applications", value: "24" },
@@ -35,6 +40,18 @@ const recentApplications = [
 ];
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  async function handleLogout() {
+    setLoggingOut(true);
+
+    const supabase = createBrowserSupabaseClient();
+    await supabase.auth.signOut();
+
+    router.push("/login");
+  }
+
   return (
     <main className="min-h-screen bg-slate-50 text-slate-950">
       <header className="border-b border-slate-200 bg-white">
@@ -56,6 +73,14 @@ export default function DashboardPage() {
             >
               View All Applications
             </Link>
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={loggingOut}
+              className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+            >
+              {loggingOut ? "Logging out..." : "Logout"}
+            </button>
           </nav>
         </div>
       </header>
