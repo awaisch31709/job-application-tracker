@@ -34,6 +34,7 @@ export default function ApplicationDetailsPage() {
   const router = useRouter();
   const [application, setApplication] = useState<Application | null>(null);
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
@@ -69,6 +70,44 @@ export default function ApplicationDetailsPage() {
 
     loadApplication();
   }, [params.id, router]);
+
+  async function handleDelete() {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this application?",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeleting(true);
+    setErrorMessage("");
+
+    const supabase = createBrowserSupabaseClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("applications")
+      .delete()
+      .eq("id", params.id)
+      .eq("user_id", user.id);
+
+    setDeleting(false);
+
+    if (error) {
+      setErrorMessage(error.message);
+      return;
+    }
+
+    router.push("/applications");
+  }
 
   const details = application
     ? [
@@ -224,9 +263,11 @@ export default function ApplicationDetailsPage() {
                 </Link>
                 <button
                   type="button"
-                  className="rounded-md border border-red-200 bg-white px-5 py-3 text-sm font-semibold text-red-700 transition hover:bg-red-50"
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="rounded-md border border-red-200 bg-white px-5 py-3 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:bg-red-50 disabled:text-red-300"
                 >
-                  Delete Application
+                  {deleting ? "Deleting..." : "Delete Application"}
                 </button>
               </div>
             </section>
