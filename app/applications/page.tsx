@@ -1,44 +1,71 @@
-import Link from "next/link";
+"use client";
 
-const applications = [
-  {
-    company: "Nova Studio",
-    title: "Frontend Developer",
-    status: "Applied",
-    location: "Remote",
-    appliedDate: "Jun 18, 2026",
-  },
-  {
-    company: "BrightApps",
-    title: "Junior Full-Stack Engineer",
-    status: "Interviewing",
-    location: "New York, NY",
-    appliedDate: "Jun 16, 2026",
-  },
-  {
-    company: "CloudPeak",
-    title: "React Developer",
-    status: "Offer",
-    location: "Austin, TX",
-    appliedDate: "Jun 12, 2026",
-  },
-  {
-    company: "PixelWorks",
-    title: "Web Developer",
-    status: "Applied",
-    location: "Chicago, IL",
-    appliedDate: "Jun 9, 2026",
-  },
-  {
-    company: "LaunchGrid",
-    title: "UI Engineer",
-    status: "Saved",
-    location: "San Francisco, CA",
-    appliedDate: "Jun 5, 2026",
-  },
-];
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+
+type Application = {
+  id: string;
+  company_name: string;
+  job_title: string;
+  status: string;
+  location: string | null;
+  applied_date: string | null;
+  created_at: string;
+};
+
+function formatDate(date: string | null) {
+  if (!date) {
+    return "Not added";
+  }
+
+  return new Date(date).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
 
 export default function ApplicationsPage() {
+  const router = useRouter();
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    async function loadApplications() {
+      const supabase = createBrowserSupabaseClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("applications")
+        .select(
+          "id, company_name, job_title, status, location, applied_date, created_at",
+        )
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        setErrorMessage(error.message);
+        setLoading(false);
+        return;
+      }
+
+      setApplications(data ?? []);
+      setLoading(false);
+    }
+
+    loadApplications();
+  }, [router]);
+
   return (
     <main className="min-h-screen bg-slate-50 text-slate-950">
       <header className="border-b border-slate-200 bg-white">
@@ -74,7 +101,7 @@ export default function ApplicationsPage() {
               Applications
             </h1>
             <p className="mt-3 max-w-2xl text-slate-600">
-              Review your saved demo applications in one organized list.
+              Review your saved applications in one organized list.
             </p>
           </div>
 
@@ -121,47 +148,70 @@ export default function ApplicationsPage() {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] text-left">
-              <thead className="bg-slate-50 text-sm text-slate-500">
-                <tr>
-                  <th className="px-6 py-3 font-medium">Company</th>
-                  <th className="px-6 py-3 font-medium">Job Title</th>
-                  <th className="px-6 py-3 font-medium">Status</th>
-                  <th className="px-6 py-3 font-medium">Location</th>
-                  <th className="px-6 py-3 font-medium">Applied Date</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {applications.map((application) => (
-                  <tr key={`${application.company}-${application.title}`}>
-                    <td className="px-6 py-4 font-medium">
-                      {application.company}
-                    </td>
-                    <td className="px-6 py-4">
-                      <Link
-                        href="/applications/1"
-                        className="font-medium text-slate-950 hover:text-slate-700"
-                      >
-                        {application.title}
-                      </Link>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
-                        {application.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-slate-600">
-                      {application.location}
-                    </td>
-                    <td className="px-6 py-4 text-slate-600">
-                      {application.appliedDate}
-                    </td>
+          {loading ? (
+            <p className="px-6 py-8 text-sm font-medium text-slate-600">
+              Loading applications...
+            </p>
+          ) : errorMessage ? (
+            <p className="m-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {errorMessage}
+            </p>
+          ) : applications.length === 0 ? (
+            <div className="px-6 py-10 text-center">
+              <h2 className="text-lg font-semibold">No applications yet</h2>
+              <p className="mt-2 text-sm text-slate-500">
+                Add your first job application to start tracking your search.
+              </p>
+              <Link
+                href="/applications/new"
+                className="mt-5 inline-flex rounded-md bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+              >
+                Add Application
+              </Link>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[760px] text-left">
+                <thead className="bg-slate-50 text-sm text-slate-500">
+                  <tr>
+                    <th className="px-6 py-3 font-medium">Company</th>
+                    <th className="px-6 py-3 font-medium">Job Title</th>
+                    <th className="px-6 py-3 font-medium">Status</th>
+                    <th className="px-6 py-3 font-medium">Location</th>
+                    <th className="px-6 py-3 font-medium">Applied Date</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {applications.map((application) => (
+                    <tr key={application.id}>
+                      <td className="px-6 py-4 font-medium">
+                        {application.company_name}
+                      </td>
+                      <td className="px-6 py-4">
+                        <Link
+                          href={`/applications/${application.id}`}
+                          className="font-medium text-slate-950 hover:text-slate-700"
+                        >
+                          {application.job_title}
+                        </Link>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
+                          {application.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-slate-600">
+                        {application.location || "Not added"}
+                      </td>
+                      <td className="px-6 py-4 text-slate-600">
+                        {formatDate(application.applied_date)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
       </section>
     </main>
