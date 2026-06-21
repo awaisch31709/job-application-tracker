@@ -1,28 +1,87 @@
-import Link from "next/link";
+"use client";
 
-const application = {
-  company: "Nova Studio",
-  title: "Frontend Developer",
-  url: "https://example.com/jobs/frontend-developer",
-  location: "Remote",
-  status: "Applied",
-  salaryRange: "$65,000 - $85,000",
-  appliedDate: "Jun 18, 2026",
-  notes:
-    "Applied through the company careers page. Follow up next week if there is no response.",
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+
+type Application = {
+  id: string;
+  company_name: string;
+  job_title: string;
+  job_url: string | null;
+  location: string | null;
+  status: string;
+  salary_range: string | null;
+  applied_date: string | null;
+  notes: string | null;
 };
 
-const details = [
-  { label: "Company Name", value: application.company },
-  { label: "Job Title", value: application.title },
-  { label: "Job URL", value: application.url },
-  { label: "Location", value: application.location },
-  { label: "Status", value: application.status },
-  { label: "Salary Range", value: application.salaryRange },
-  { label: "Applied Date", value: application.appliedDate },
-];
+function formatDate(date: string | null) {
+  if (!date) {
+    return "Not added";
+  }
+
+  return new Date(date).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
 
 export default function ApplicationDetailsPage() {
+  const params = useParams<{ id: string }>();
+  const router = useRouter();
+  const [application, setApplication] = useState<Application | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    async function loadApplication() {
+      const supabase = createBrowserSupabaseClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("applications")
+        .select(
+          "id, company_name, job_title, job_url, location, status, salary_range, applied_date, notes",
+        )
+        .eq("id", params.id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (error) {
+        setErrorMessage(error.message);
+        setLoading(false);
+        return;
+      }
+
+      setApplication(data);
+      setLoading(false);
+    }
+
+    loadApplication();
+  }, [params.id, router]);
+
+  const details = application
+    ? [
+        { label: "Company Name", value: application.company_name },
+        { label: "Job Title", value: application.job_title },
+        { label: "Job URL", value: application.job_url || "Not added" },
+        { label: "Location", value: application.location || "Not added" },
+        { label: "Status", value: application.status },
+        { label: "Salary Range", value: application.salary_range || "Not added" },
+        { label: "Applied Date", value: formatDate(application.applied_date) },
+      ]
+    : [];
+
   return (
     <main className="min-h-screen bg-slate-50 text-slate-950">
       <header className="border-b border-slate-200 bg-white">
@@ -49,102 +108,130 @@ export default function ApplicationDetailsPage() {
       </header>
 
       <section className="mx-auto max-w-6xl px-6 py-10">
-        <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-              Application details
-            </p>
-            <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
-              {application.title}
+        {loading ? (
+          <p className="rounded-lg border border-slate-200 bg-white px-6 py-4 text-sm font-medium text-slate-600 shadow-sm">
+            Loading application...
+          </p>
+        ) : errorMessage ? (
+          <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {errorMessage}
+          </p>
+        ) : !application ? (
+          <div className="rounded-lg border border-slate-200 bg-white px-6 py-10 text-center shadow-sm">
+            <h1 className="text-2xl font-bold tracking-tight">
+              Application not found
             </h1>
-            <p className="mt-3 max-w-2xl text-slate-600">
-              Review the main details for this demo job application.
+            <p className="mt-3 text-slate-600">
+              This application may not exist, or it may not belong to your
+              account.
             </p>
-          </div>
-
-          <div className="flex flex-col-reverse gap-3 sm:flex-row">
             <Link
               href="/applications"
-              className="rounded-md border border-slate-300 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
+              className="mt-6 inline-flex rounded-md bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
             >
               Back to Applications
             </Link>
-            <Link
-              href="/applications/1/edit"
-              className="rounded-md bg-slate-950 px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-slate-800"
-            >
-              Edit Application
-            </Link>
           </div>
-        </div>
-
-        <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-200 px-6 py-5">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        ) : (
+          <>
+            <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <h2 className="text-xl font-semibold">
-                  {application.company}
-                </h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  Static demo data for one application.
+                <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+                  Application details
+                </p>
+                <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
+                  {application.job_title}
+                </h1>
+                <p className="mt-3 max-w-2xl text-slate-600">
+                  Review the main details for this job application.
                 </p>
               </div>
-              <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
-                {application.status}
-              </span>
-            </div>
-          </div>
 
-          <div className="grid gap-5 px-6 py-6 md:grid-cols-2">
-            {details.map((detail) => (
-              <div key={detail.label}>
-                <p className="text-sm font-medium text-slate-500">
-                  {detail.label}
-                </p>
-                {detail.label === "Job URL" ? (
-                  <a
-                    href={detail.value}
-                    className="mt-2 block break-words font-medium text-slate-950 underline decoration-slate-300 underline-offset-4 hover:text-slate-700"
-                  >
-                    {detail.value}
-                  </a>
-                ) : (
-                  <p className="mt-2 font-medium text-slate-950">
-                    {detail.value}
+              <div className="flex flex-col-reverse gap-3 sm:flex-row">
+                <Link
+                  href="/applications"
+                  className="rounded-md border border-slate-300 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
+                >
+                  Back to Applications
+                </Link>
+                <Link
+                  href={`/applications/${application.id}/edit`}
+                  className="rounded-md bg-slate-950 px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-slate-800"
+                >
+                  Edit Application
+                </Link>
+              </div>
+            </div>
+
+            <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
+              <div className="border-b border-slate-200 px-6 py-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="text-xl font-semibold">
+                      {application.company_name}
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Saved application details from your tracker.
+                    </p>
+                  </div>
+                  <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
+                    {application.status}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid gap-5 px-6 py-6 md:grid-cols-2">
+                {details.map((detail) => (
+                  <div key={detail.label}>
+                    <p className="text-sm font-medium text-slate-500">
+                      {detail.label}
+                    </p>
+                    {detail.label === "Job URL" && application.job_url ? (
+                      <a
+                        href={application.job_url}
+                        className="mt-2 block break-words font-medium text-slate-950 underline decoration-slate-300 underline-offset-4 hover:text-slate-700"
+                      >
+                        {application.job_url}
+                      </a>
+                    ) : (
+                      <p className="mt-2 font-medium text-slate-950">
+                        {detail.value}
+                      </p>
+                    )}
+                  </div>
+                ))}
+
+                <div className="md:col-span-2">
+                  <p className="text-sm font-medium text-slate-500">Notes</p>
+                  <p className="mt-2 rounded-md bg-slate-50 p-4 leading-7 text-slate-700">
+                    {application.notes || "No notes added."}
                   </p>
-                )}
+                </div>
               </div>
-            ))}
 
-            <div className="md:col-span-2">
-              <p className="text-sm font-medium text-slate-500">Notes</p>
-              <p className="mt-2 rounded-md bg-slate-50 p-4 leading-7 text-slate-700">
-                {application.notes}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-col-reverse gap-3 border-t border-slate-200 px-6 py-5 sm:flex-row sm:justify-end">
-            <Link
-              href="/applications"
-              className="rounded-md border border-slate-300 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
-            >
-              Back to Applications
-            </Link>
-            <Link
-              href="/applications/1/edit"
-              className="rounded-md bg-slate-950 px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-slate-800"
-            >
-              Edit Application
-            </Link>
-            <button
-              type="button"
-              className="rounded-md border border-red-200 bg-white px-5 py-3 text-sm font-semibold text-red-700 transition hover:bg-red-50"
-            >
-              Delete Application
-            </button>
-          </div>
-        </section>
+              <div className="flex flex-col-reverse gap-3 border-t border-slate-200 px-6 py-5 sm:flex-row sm:justify-end">
+                <Link
+                  href="/applications"
+                  className="rounded-md border border-slate-300 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
+                >
+                  Back to Applications
+                </Link>
+                <Link
+                  href={`/applications/${application.id}/edit`}
+                  className="rounded-md bg-slate-950 px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-slate-800"
+                >
+                  Edit Application
+                </Link>
+                <button
+                  type="button"
+                  className="rounded-md border border-red-200 bg-white px-5 py-3 text-sm font-semibold text-red-700 transition hover:bg-red-50"
+                >
+                  Delete Application
+                </button>
+              </div>
+            </section>
+          </>
+        )}
       </section>
     </main>
   );
